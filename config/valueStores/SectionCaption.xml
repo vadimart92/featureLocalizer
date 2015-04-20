@@ -1,0 +1,12 @@
+<valueStoreGroups>
+	<group name="SectionCaption">
+		<item>
+			<ru>Контрагенты</ru>
+			<en>Accounts</en>
+		</item>
+		<item>
+			<ru>Контакты</ru>
+			<en>Contacts</en>
+		</item>
+	</group>
+</valueStoreGroups>

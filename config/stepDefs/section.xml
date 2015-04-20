@@ -1,0 +1,10 @@
+<stepDefs>
+	<item>
+		<re>/^Выбран раздел "([^"]*)"$/</re>
+		<param vsGroup="SectionCaption" />
+	</item>
+	<item>
+		<re>/^Открыт раздел "([^"]*)"$/</re>
+		<param vsGroup="SectionCaption" />
+	</item>
+</stepDefs>
