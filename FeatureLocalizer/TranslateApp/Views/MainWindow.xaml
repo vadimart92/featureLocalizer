@@ -76,7 +76,7 @@
                                SyntaxHighlighting="Gherkin"/>
             <avalon:TextEditor Name="TranslationTextEditor" Grid.Column="2" 
                                Style="{StaticResource ResourceKey=MainTextBoxStyle}"  
-                               Document="{Binding Path=FirstFileText}"
+                               Document="{Binding Path=SecondFileText}"
                                />
         </Grid>
         <fluent:StatusBar Grid.Row="2">

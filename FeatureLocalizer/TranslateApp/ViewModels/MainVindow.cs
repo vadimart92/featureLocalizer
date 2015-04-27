@@ -7,11 +7,14 @@ using Microsoft.Win32;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Highlighting;
 using TranslateApp.Common;
+using ICSharpCode.AvalonEdit.Folding;
 
 namespace TranslateApp.ViewModels {
 	public sealed class MainWindowViewModel : ViewModelBase {
 
-		IHighlighter _h;
+		BraceFoldingStrategy _foldingStrategy = new BraceFoldingStrategy();
+
+		ColorizeAvalonEdit _ce = new ColorizeAvalonEdit();
 
 		public MainWindowViewModel() {
 			Title = "Hello!";
@@ -21,8 +24,9 @@ namespace TranslateApp.ViewModels {
 		public TextEditor TranslationTextEditor {
 			get { return _translationTextEditor; }
 			set {
+				UpdateFoldingStrategy(value, _foldingStrategy);
+				value.TextArea.TextView.LineTransformers.Add(_ce);
 				_translationTextEditor = value;
-				_h = new DocumentHighlighter(_translationTextEditor.Document, new Def());
 			}
 		}
 
@@ -31,21 +35,25 @@ namespace TranslateApp.ViewModels {
 			get { return _sourceTextEditor; }
 			set {
 				value.TextArea.Caret.PositionChanged+=SourceTextEditorCaret_PositionChanged;
+				UpdateFoldingStrategy(value, _foldingStrategy);
+				value.TextArea.TextView.LineTransformers.Add(_ce);
 				_sourceTextEditor = value;
 			}
 		}
 
 		private void SourceTextEditorCaret_PositionChanged(object sender, System.EventArgs e) {
-			var line = TranslationTextEditor.Document.Lines[SourceTextEditor.TextArea.Caret.Line];
-			
-			
+			if (TranslationTextEditor.Text.Length > SourceTextEditor.CaretOffset) {
+				TranslationTextEditor.CaretOffset = SourceTextEditor.CaretOffset;
+				TranslationTextEditor.ScrollToVerticalOffset(SourceTextEditor.VerticalOffset);
+				_ce.LineNum = TranslationTextEditor.TextArea.Caret.Line;
+				TranslationTextEditor.TextArea.TextView.Redraw();
+				SourceTextEditor.TextArea.TextView.Redraw();
+			}
+		}
 
-			//h.DefaultTextColor.Background = h.GetNamedColor("x").Background;
-			_h.HighlightLine(line.LineNumber);
-			_h.UpdateHighlightingState(line.LineNumber);
-			TranslationTextEditor.CaretOffset = SourceTextEditor.CaretOffset;
-			TranslationTextEditor.ScrollToVerticalOffset(SourceTextEditor.VerticalOffset);
-			
+		private void UpdateFoldingStrategy(TextEditor editor, BraceFoldingStrategy foldingStrategy) {
+			var foldingManager = (editor.TextArea.GetService(typeof(FoldingManager)) as FoldingManager) ?? FoldingManager.Install(editor.TextArea);
+			foldingStrategy.UpdateFoldings(foldingManager, editor.Document);
 		}
 
 		#region FirstFileText property
@@ -121,6 +129,8 @@ namespace TranslateApp.ViewModels {
 				var str = File.ReadAllText(fd.FileName);
 				FirstFileText.Text = str;
 				SecondFileText.Text = str;
+				UpdateFoldingStrategy(SourceTextEditor, _foldingStrategy);
+				UpdateFoldingStrategy(TranslationTextEditor, _foldingStrategy);
 			}
 			
 		}
