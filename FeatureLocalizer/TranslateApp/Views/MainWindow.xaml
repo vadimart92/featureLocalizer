@@ -13,7 +13,7 @@
         ShowTitleBar="True"
         WindowStartupLocation="CenterScreen"
         Title="{av:Binding Path=Title}"
-        Height="430" Width="635">
+        Height="800" Width="1200">
     <metro:MetroWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -47,11 +47,22 @@
                     <fluent:Button Command="{Binding Path=OpenFileCommand}">Open</fluent:Button>
                 </fluent:RibbonGroupBox>
                 <fluent:RibbonGroupBox Header="Navigation">
-                    <fluent:Button>Up&#160;↑</fluent:Button>
-                    <fluent:Button>Down&#160;↓</fluent:Button>
+                    <fluent:Button Command="{Binding Path=LineUpCommand}">Up&#160;↑</fluent:Button>
+                    <fluent:Button Command="{Binding Path=LineDownCommand}">Down&#160;↓</fluent:Button>
                 </fluent:RibbonGroupBox>
-                <fluent:RibbonGroupBox Header="Dictionary">
-                    
+                <fluent:RibbonGroupBox Header="Dictionary" MinWidth="90">
+                    <fluent:GalleryPanel MaxItemsInRow="8">
+                        <fluent:Gallery ItemsSource="{Binding Path=CurrenTranslationVariants, Mode=OneWay}" MinWidth="60">
+                            <fluent:Gallery.ItemTemplate>
+                                <DataTemplate>
+                                    <fluent:GalleryItem Content="{Binding NameRu}" 
+                                                        Command="{Binding ReplaceTextCommand}" 
+                                                        CommandParameter="{Binding ElementName=TranslationTextEditor}">
+                                    </fluent:GalleryItem>
+                                </DataTemplate>
+                            </fluent:Gallery.ItemTemplate>
+                        </fluent:Gallery>
+                    </fluent:GalleryPanel>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
             <fluent:RibbonTabItem Header="Learn"

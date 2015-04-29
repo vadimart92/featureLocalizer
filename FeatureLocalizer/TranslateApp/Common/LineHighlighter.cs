@@ -16,9 +16,9 @@ namespace TranslateApp.Common {
 
 		protected override void ColorizeLine(ICSharpCode.AvalonEdit.Document.DocumentLine line) {
 			if (line.LineNumber == LineNum) {
-				base.ChangeLinePart(line.Offset,line.EndOffset, (VisualLineElement element) => {
-						element.TextRunProperties.SetBackgroundBrush(Brushes.Red);
-					});
+				ChangeLinePart(line.Offset,line.EndOffset, (element) => {
+					element.TextRunProperties.SetBackgroundBrush(Brushes.Moccasin);
+				});
 			}
 		}
 	}
