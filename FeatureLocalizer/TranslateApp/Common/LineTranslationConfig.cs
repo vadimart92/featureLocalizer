@@ -31,30 +31,32 @@ namespace TranslateApp.Common {
 
 		#region ReplaceText command
 
-		private Command<TextEditor> _replaceTextCommand;
+		private Command<object> _replaceTextCommand;
 
 		/// <summary>
 		/// Gets the ReplaceText command.
 		/// </summary>
-		public Command<TextEditor> ReplaceTextCommand
+		public Command<object> ReplaceTextCommand
 		{
 			get {
-				return _replaceTextCommand ?? (_replaceTextCommand = new Command<TextEditor>(ReplaceText));
+				return _replaceTextCommand ?? (_replaceTextCommand = new Command<object>(ReplaceText));
 			}
 		}
 
 		/// <summary>
 		/// Method to invoke when the ReplaceText command is executed.
 		/// </summary>
-		private void ReplaceText(TextEditor textEditor) {
-			var doc = textEditor.Document;
-			var line = doc.Lines[Config.LineNumber - 1];
+		private void ReplaceText(object value) {
+			var textEditorData = TextEditorsParameterConverter.GetEditorsFromParameter(value);
+			var doc = textEditorData.SourceTextEditor.Document;
+			var line = doc.Lines[Config.LineNumber];
 			var lineText = doc.GetText(line.Offset, line.Length);
 			var match = Config.Regex.Match(lineText);
 			if (match.Success) {
 				var currentValue = match.Groups[1].Value;
-				var lineStringOffset = lineText.IndexOf(currentValue, StringComparison.OrdinalIgnoreCase);
-				textEditor.TextArea.Document.Replace(line.Offset + lineStringOffset, currentValue.Length , MacrosValue);
+				var str = lineText.Replace(currentValue, MacrosValue);
+				var destLine = textEditorData.DestinationTextEditor.Document.GetLineByNumber(Config.LineNumber+1);
+				textEditorData.DestinationTextEditor.Document.Replace(destLine.Offset, destLine.Length, str);
 			}
 			
 		}

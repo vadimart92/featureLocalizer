@@ -1,6 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:avalon="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit">
+                    xmlns:common="clr-namespace:TranslateApp.Common"
+                    xmlns:avalon="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
+                    xmlns:fluent="urn:fluent-ribbon">
     <Style TargetType="avalon:TextEditor" x:Key="MainTextBoxStyle">
         <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
         <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
@@ -8,4 +10,5 @@
         <Setter Property="FontFamily" Value="Monospase"/>
         <Setter Property="FontSize" Value="14"/>
     </Style>
+    <common:TextEditorsParameterConverter x:Key="EditorsParameterConverter" />
 </ResourceDictionary>

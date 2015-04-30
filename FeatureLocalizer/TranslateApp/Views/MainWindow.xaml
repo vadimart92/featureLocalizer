@@ -7,6 +7,7 @@
         xmlns:avalon="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
         xmlns:viewModels="clr-namespace:TranslateApp.ViewModels"
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:common="clr-namespace:TranslateApp.Common"
         fluent:RibbonProperties.TitleBarHeight="0"
         GlowBrush="{DynamicResource AccentColorBrush}"
         ShowIconOnTitleBar="False"
@@ -50,19 +51,26 @@
                     <fluent:Button Command="{Binding Path=LineUpCommand}">Up&#160;↑</fluent:Button>
                     <fluent:Button Command="{Binding Path=LineDownCommand}">Down&#160;↓</fluent:Button>
                 </fluent:RibbonGroupBox>
-                <fluent:RibbonGroupBox Header="Dictionary" MinWidth="90">
-                    <fluent:GalleryPanel MaxItemsInRow="8">
-                        <fluent:Gallery ItemsSource="{Binding Path=CurrenTranslationVariants, Mode=OneWay}" MinWidth="60">
-                            <fluent:Gallery.ItemTemplate>
-                                <DataTemplate>
-                                    <fluent:GalleryItem Content="{Binding NameRu}" 
-                                                        Command="{Binding ReplaceTextCommand}" 
-                                                        CommandParameter="{Binding ElementName=TranslationTextEditor}">
-                                    </fluent:GalleryItem>
-                                </DataTemplate>
-                            </fluent:Gallery.ItemTemplate>
-                        </fluent:Gallery>
-                    </fluent:GalleryPanel>
+                <fluent:RibbonGroupBox Header="Dictionary" >
+                    <fluent:InRibbonGallery ResizeMode="Both" MinItemsInRow="5" MaxItemsInRow="15"
+                                            ItemsSource="{Binding Path=CurrenTranslationVariants}"
+                                            Selectable="False"
+                                            >
+                        <fluent:InRibbonGallery.ItemTemplate>
+                            <DataTemplate>
+                                <fluent:Button Header="{Binding NameRu}" 
+                                               Command="{Binding ReplaceTextCommand}"
+                                               Size="Middle">
+                                    <fluent:Button.CommandParameter>
+                                        <MultiBinding Converter="{StaticResource EditorsParameterConverter}">
+                                            <Binding ElementName="SourceTextEditor" />
+                                            <Binding ElementName="TranslationTextEditor"/>
+                                        </MultiBinding>
+                                    </fluent:Button.CommandParameter>
+                                </fluent:Button>
+                            </DataTemplate>
+                        </fluent:InRibbonGallery.ItemTemplate>
+                    </fluent:InRibbonGallery>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
             <fluent:RibbonTabItem Header="Learn"

@@ -83,6 +83,7 @@
     <Compile Include="Common\LineHighlighter.cs" />
     <Compile Include="Common\LineTranslationConfig.cs" />
     <Compile Include="Common\TranslateComletionData.cs" />
+    <Compile Include="Common\TextEditorsParameterConverter.cs" />
     <Compile Include="ViewModels\MainVindow.cs" />
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

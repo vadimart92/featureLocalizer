@@ -107,7 +107,7 @@ namespace TranslateApp.ViewModels {
 
 		private void UpdateTranslationConfigs() {
 			var config = new LineTranslationConfig {
-				LineNumber = 17,
+				LineNumber = 16,
 				Regex = new Regex("Открыт раздел \"(.*)\"")
 					
 			};
@@ -128,27 +128,10 @@ namespace TranslateApp.ViewModels {
 				return;
 			}
 			CurrentConfig = TranslationConfigs[CurrentLineIndex];
-			SourceTextEditor.TextArea.Caret.Line = CurrentConfig.LineNumber;
+			SourceTextEditor.TextArea.Caret.Line = CurrentConfig.LineNumber + 1;
 			SourceTextEditor.TextArea.Caret.Column = 0;
 			SourceTextEditor.TextArea.Caret.BringCaretToView();
 			
-		}
-
-		private void ShowCompletionWindow(LineTranslationConfig currentConfig, int startOffset, int length) {
-			completionWindow = new CompletionWindow(TranslationTextEditor.TextArea);
-			IList<ICompletionData> data = completionWindow.CompletionList.CompletionData;
-			data.Add(new NewTranslateComletionData());
-			foreach (var variant in currentConfig.Variants) {
-				data.Add(new TranslateComletionData(variant, startOffset, length));
-			}
-			//completionWindow.CloseAutomatically = false;
-			completionWindow.CloseWhenCaretAtBeginning = false;
-			completionWindow.StartOffset = startOffset;
-			completionWindow.EndOffset = startOffset + length;
-			completionWindow.Show();
-			completionWindow.Closed += delegate {
-				completionWindow = null;
-			};
 		}
 
 		#endregion
