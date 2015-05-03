@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Catel.MVVM;
-using ICSharpCode.AvalonEdit;
 
 namespace TranslateApp.Common {
 	public class LineTranslationConfig {
@@ -49,13 +43,13 @@ namespace TranslateApp.Common {
 		private void ReplaceText(object value) {
 			var textEditorData = TextEditorsParameterConverter.GetEditorsFromParameter(value);
 			var doc = textEditorData.SourceTextEditor.Document;
-			var line = doc.Lines[Config.LineNumber];
+			var line = doc.Lines[Config.LineNumber-1];
 			var lineText = doc.GetText(line.Offset, line.Length);
 			var match = Config.Regex.Match(lineText);
 			if (match.Success) {
 				var currentValue = match.Groups[1].Value;
 				var str = lineText.Replace(currentValue, MacrosValue);
-				var destLine = textEditorData.DestinationTextEditor.Document.GetLineByNumber(Config.LineNumber+1);
+				var destLine = textEditorData.DestinationTextEditor.Document.GetLineByNumber(Config.LineNumber);
 				textEditorData.DestinationTextEditor.Document.Replace(destLine.Offset, destLine.Length, str);
 			}
 			

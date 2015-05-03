@@ -207,10 +207,10 @@ namespace ICSharpCode.AvalonEdit.Editing
 					if (text != null) {
 						int start = textArea.Caret.Offset;
 						if (mode == SelectionMode.Drag && textArea.Selection.Contains(start)) {
-							Debug.WriteLine("Drop: did not drop: drop target is inside selection");
+							//Debug.WriteLine("Drop: did not drop: drop target is inside selection");
 							e.Effects = DragDropEffects.None;
 						} else {
-							Debug.WriteLine("Drop: insert at " + start);
+							//Debug.WriteLine("Drop: insert at " + start);
 							
 							bool rectangular = e.Data.GetDataPresent(RectangleSelection.RectangularSelectionDataType);
 							

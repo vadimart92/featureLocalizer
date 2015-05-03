@@ -17,11 +17,26 @@ namespace FeatureLocalizer {
 
 		private Dictionary<Regex, ConcurrentBag<GherkinStep>> _stepDefRegexes = new Dictionary<Regex, ConcurrentBag<GherkinStep>>();
 
-		public void Translate(string configDir, string featuresDir) {
-			var vsDir = Path.Combine(configDir, ValueStoreDirName);
-			var sdDir = Path.Combine(configDir, StepDefDirName);
-			var valueStore = new ValueStore(vsDir);
-			var stepDefStore = new StepDefStore(sdDir, valueStore);
+		private string _configFolder;
+		private string ConfigFolder
+		{
+			get { return _configFolder; }
+			set {
+				Debug.Assert(Directory.Exists(value), String.Format("path {0} does not exist", value));
+				_configFolder = value;
+			}
+		}
+
+		public ValueStore ValueStore { get; private set; }
+		public StepDefStore StepDefStore { get; private set; }
+
+		public string ValueStoreConfigsDir { get { return Path.Combine(ConfigFolder, ValueStoreDirName); }}
+		public string StepDefStoreConfigsDir { get { return Path.Combine(ConfigFolder, StepDefDirName); }}
+
+		public FeatureLocalizer(string configFolder) {
+			ConfigFolder = configFolder;
+			ValueStore = new ValueStore(ValueStoreConfigsDir);
+			StepDefStore = new StepDefStore(StepDefStoreConfigsDir, ValueStore);
 		}
 
 		public void Learn(string cucumberProjectDir) {
@@ -66,10 +81,8 @@ namespace FeatureLocalizer {
 					stepDefStore.AddStepDef(stepDefRegex.Key);
 				}
 			}
-			var vsDir = Path.Combine(configDir, ValueStoreDirName);
-			var sdDir = Path.Combine(configDir, StepDefDirName);
-			valueStore.Save(vsDir, "learned");
-			stepDefStore.Save(sdDir, "learned");
+			valueStore.Save(ValueStoreConfigsDir, "learned");
+			stepDefStore.Save(StepDefStoreConfigsDir, "learned");
 		}
 
 		private void GetStepDefList(string cucumberProjectDir) {

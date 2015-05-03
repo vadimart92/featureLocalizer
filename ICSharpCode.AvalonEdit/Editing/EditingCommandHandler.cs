@@ -388,7 +388,7 @@ namespace ICSharpCode.AvalonEdit.Editing
 				}
 				if (dataObject == null)
 					return;
-				Debug.WriteLine( dataObject.GetData(DataFormats.Html) as string );
+				//Debug.WriteLine( dataObject.GetData(DataFormats.Html) as string );
 				
 				// convert text back to correct newlines for this document
 				string newLine = TextUtilities.GetNewLineFromDocument(textArea.Document, textArea.Caret.Line);

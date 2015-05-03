@@ -88,7 +88,7 @@ namespace ICSharpCode.AvalonEdit.Document
 			Debug.Assert(nodes.Length > 0);
 			// now build the corresponding balanced tree
 			int height = GetTreeHeight(nodes.Length);
-			Debug.WriteLine("DocumentLineTree will have height: " + height);
+			//Debug.WriteLine("DocumentLineTree will have height: " + height);
 			root = BuildTree(nodes, 0, nodes.Length, height);
 			root.color = BLACK;
 			#if DEBUG
@@ -599,8 +599,7 @@ namespace ICSharpCode.AvalonEdit.Document
 			Debug.Assert(node == null || node.parent == parentNode);
 			if (node == parentNode.left)
 				return parentNode.right;
-			else
-				return parentNode.left;
+			return parentNode.left;
 		}
 		
 		static bool GetColor(LineNode node)

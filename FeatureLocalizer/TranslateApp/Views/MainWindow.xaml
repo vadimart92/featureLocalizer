@@ -8,6 +8,7 @@
         xmlns:viewModels="clr-namespace:TranslateApp.ViewModels"
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:common="clr-namespace:TranslateApp.Common"
+                   xmlns:controls1="clr-namespace:TranslateApp.Controls"
         fluent:RibbonProperties.TitleBarHeight="0"
         GlowBrush="{DynamicResource AccentColorBrush}"
         ShowIconOnTitleBar="False"
@@ -35,6 +36,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <fluent:Ribbon AutomaticStateManagement="True"
                        x:Name="ribbon"
@@ -52,7 +54,7 @@
                     <fluent:Button Command="{Binding Path=LineDownCommand}">Down&#160;↓</fluent:Button>
                 </fluent:RibbonGroupBox>
                 <fluent:RibbonGroupBox Header="Dictionary" >
-                    <fluent:InRibbonGallery ResizeMode="Both" MinItemsInRow="5" MaxItemsInRow="15"
+                    <fluent:InRibbonGallery ResizeMode="Both" MinItemsInRow="5" MaxItemsInRow="10"
                                             ItemsSource="{Binding Path=CurrenTranslationVariants}"
                                             Selectable="False"
                                             >
@@ -79,7 +81,7 @@
                                   ReduceOrder="groupLL, groupLL, groupLL, (groupLL),(groupLL),(groupLL),(groupLL),(groupLL)">
 
                 <fluent:RibbonGroupBox Header="Gallery">
-                    <fluent:Button>click</fluent:Button>
+                    <fluent:Button Command="{Binding LearnCommand}">Select dir</fluent:Button>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
@@ -92,7 +94,8 @@
             <avalon:TextEditor Name="SourceTextEditor" Grid.Column="0" 
                                Style="{StaticResource ResourceKey=MainTextBoxStyle}" 
                                Document="{Binding Path=FirstFileText}"
-                               SyntaxHighlighting="Gherkin"/>
+                               SyntaxHighlighting="Gherkin"
+                               IsEnabled="False"/>
             <avalon:TextEditor Name="TranslationTextEditor" Grid.Column="2" 
                                Style="{StaticResource ResourceKey=MainTextBoxStyle}"  
                                Document="{Binding Path=SecondFileText}"
@@ -102,7 +105,7 @@
             <fluent:StatusBarItem Title="Words Width"
                                   Value="150"
                                   HorizontalAlignment="Left">
-                <TextBlock Text="150 px" />
+                <TextBlock Text="{Binding CurrentStepInfo}" />
             </fluent:StatusBarItem>
             <Separator HorizontalAlignment="Left" />
             <fluent:StatusBarItem Title="Selected Words"
@@ -111,5 +114,12 @@
                                   Content="15"
                                   HorizontalAlignment="Left" />
         </fluent:StatusBar>
+        <Grid Grid.Row="3" VerticalAlignment="Bottom">
+            <controls1:LoadingPanel x:Name="loadingPanel"
+                        IsLoading="{Binding PanelLoading}"
+                        Message="{Binding PanelMainMessage}"
+                        SubMessage="{Binding PanelSubMessage}" 
+                        ClosePanelCommand="{Binding PanelCloseCommand}"/>
+        </Grid>
     </Grid>
 </metro:MetroWindow>

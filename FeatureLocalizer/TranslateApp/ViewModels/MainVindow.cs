@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows;
 using Catel.Collections;
 using Catel.Data;
 using Catel.IoC;
@@ -14,12 +16,19 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Highlighting;
 using TranslateApp.Common;
 using ICSharpCode.AvalonEdit.Folding;
+using Ookii.Dialogs.Wpf;
 
 namespace TranslateApp.ViewModels {
 	public sealed class MainWindowViewModel : ViewModelBase {
+		readonly BraceFoldingStrategy _foldingStrategy = new BraceFoldingStrategy();
+		readonly TranslationProvider _translationProvider = new TranslationProvider();
+		private string _currentFile;
 
-		BraceFoldingStrategy _foldingStrategy = new BraceFoldingStrategy();
-		private CompletionWindow completionWindow;
+		private readonly FastObservableCollection<LineTranslationVariant> _currenTranslationVariants =
+			new FastObservableCollection<LineTranslationVariant>();
+
+		private LineTranslationConfig _currentConfig;
+
 
 		ColorizeAvalonEdit _ce = new ColorizeAvalonEdit();
 
@@ -64,7 +73,7 @@ namespace TranslateApp.ViewModels {
 			}
 		}
 
-		private void SourceTextEditorCaret_PositionChanged(object sender, System.EventArgs e) {
+		private void SourceTextEditorCaret_PositionChanged(object sender, EventArgs e) {
 			if (TranslationTextEditor.Text.Length > SourceTextEditor.CaretOffset) {
 				TranslationTextEditor.CaretOffset = SourceTextEditor.CaretOffset;
 				TranslationTextEditor.ScrollToVerticalOffset(SourceTextEditor.VerticalOffset);
@@ -93,7 +102,13 @@ namespace TranslateApp.ViewModels {
 		public int CurrentLineIndex
 		{
 			get { return GetValue<int>(CurrentLineIndexProperty); }
-			set { SetValue(CurrentLineIndexProperty, value); }
+			set
+			{
+				var newVal = value < TranslationConfigs.Count ? value : 0;
+				if (TranslationConfigs.Any())
+					CurrentConfig = TranslationConfigs[newVal];
+				SetValue(CurrentLineIndexProperty, newVal);	
+			}
 		}
 
 		/// <summary>
@@ -106,32 +121,107 @@ namespace TranslateApp.ViewModels {
 		#region Translation logic
 
 		private void UpdateTranslationConfigs() {
-			var config = new LineTranslationConfig {
-				LineNumber = 16,
-				Regex = new Regex("Открыт раздел \"(.*)\"")
-					
-			};
-			config.Variants = new ObservableCollection<LineTranslationVariant> {
-				new LineTranslationVariant {NameRu = "Продажи", NameEng = "Opportunities", Config = config},
-				new LineTranslationVariant {NameRu = "Заказы", NameEng = "Orders", Config = config}
-			};
-			TranslationConfigs.Add(config);
+			var config = _translationProvider.GeTranslationConfigs(_currentFile);
+			TranslationConfigs.AddItems(config);
 		}
 
 		private void OnCurrentLineChanged() {
-			if (CurrentLineIndex >= TranslationConfigs.Count) {
-				CurrentLineIndex = 0;
-				return;
-			}
-			if (CurrentLineIndex < 0) {
-				CurrentLineIndex = TranslationConfigs.Count - 1;
-				return;
-			}
-			CurrentConfig = TranslationConfigs[CurrentLineIndex];
-			SourceTextEditor.TextArea.Caret.Line = CurrentConfig.LineNumber + 1;
-			SourceTextEditor.TextArea.Caret.Column = 0;
+			CurrentStepInfo = String.Format("Line: {0}, Exp: {1}", CurrentConfig.LineNumber, CurrentConfig.Regex);
+			SourceTextEditor.TextArea.Caret.Location = new TextLocation(CurrentConfig.LineNumber, 5);
 			SourceTextEditor.TextArea.Caret.BringCaretToView();
-			
+		}
+
+		#endregion
+
+		#region CurrentStepInfo property
+
+		/// <summary>
+		/// Gets or sets the CurrentStepInfo value.
+		/// </summary>
+		public string CurrentStepInfo
+		{
+			get { return GetValue<string>(CurrentStepInfoProperty); }
+			set { SetValue(CurrentStepInfoProperty, value); }
+		}
+
+		/// <summary>
+		/// CurrentStepInfo property data.
+		/// </summary>
+		public static readonly PropertyData CurrentStepInfoProperty = RegisterProperty("CurrentStepInfo", typeof (string));
+
+		#endregion
+
+		#region PanelLoading property
+
+		/// <summary>
+		/// Gets or sets the PanelLoading value.
+		/// </summary>
+		public bool PanelLoading
+		{
+			get { return GetValue<bool>(PanelLoadingProperty); }
+			set { SetValue(PanelLoadingProperty, value); }
+		}
+
+		/// <summary>
+		/// PanelLoading property data.
+		/// </summary>
+		public static readonly PropertyData PanelLoadingProperty = RegisterProperty("PanelLoading", typeof (bool));
+
+		#endregion
+
+		#region PanelMainMessage property
+
+		/// <summary>
+		/// Gets or sets the PanelMainMessage value.
+		/// </summary>
+		public string PanelMainMessage
+		{
+			get { return GetValue<string>(PanelMainMessageProperty); }
+			set { SetValue(PanelMainMessageProperty, value); }
+		}
+
+		/// <summary>
+		/// PanelMainMessage property data.
+		/// </summary>
+		public static readonly PropertyData PanelMainMessageProperty = RegisterProperty("PanelMainMessage", typeof (string));
+
+		#endregion
+
+		#region PanelSubMessage property
+
+		/// <summary>
+		/// Gets or sets the PanelSubMessage value.
+		/// </summary>
+		public string PanelSubMessage
+		{
+			get { return GetValue<string>(PanelSubMessageProperty); }
+			set { SetValue(PanelSubMessageProperty, value); }
+		}
+
+		/// <summary>
+		/// PanelSubMessage property data.
+		/// </summary>
+		public static readonly PropertyData PanelSubMessageProperty = RegisterProperty("PanelSubMessage", typeof (string));
+
+		#endregion
+
+		#region PanelClose command
+
+		private Command _panelCloseCommandCommand;
+
+		/// <summary>
+		/// Gets the PanelClose command.
+		/// </summary>
+		public Command PanelCloseCommand
+		{
+			get { return _panelCloseCommandCommand ?? (_panelCloseCommandCommand = new Command(PanelClose)); }
+		}
+
+		/// <summary>
+		/// Method to invoke when the PanelClose command is executed.
+		/// </summary>
+		private void PanelClose() {
+			PanelLoading = false;
 		}
 
 		#endregion
@@ -208,6 +298,7 @@ namespace TranslateApp.ViewModels {
 			var fd = new OpenFileDialog();
 			if (fd.ShowDialog() ?? false) {
 				var str = File.ReadAllText(fd.FileName);
+				_currentFile = fd.FileName;
 				FirstFileText.Text = str;
 				SecondFileText.Text = str;
 				UpdateFoldingStrategy(SourceTextEditor, _foldingStrategy);
@@ -215,6 +306,30 @@ namespace TranslateApp.ViewModels {
 				UpdateTranslationConfigs();
 			}
 			
+		}
+
+		#endregion
+
+		#region Learn command
+
+		private Command _learnCommand;
+
+		/// <summary>
+		/// Gets the Learn command.
+		/// </summary>
+		public Command LearnCommand
+		{
+			get { return _learnCommand ?? (_learnCommand = new Command(Learn)); }
+		}
+
+		/// <summary>
+		/// Method to invoke when the Learn command is executed.
+		/// </summary>
+		private void Learn() {
+			var dialog = new VistaFolderBrowserDialog();
+			if (dialog.ShowDialog() ?? false) {
+				PanelLoading = true;
+			}
 		}
 
 		#endregion
@@ -250,11 +365,7 @@ namespace TranslateApp.ViewModels {
 		#region LineDown command
 
 		private Command _lineDownCommand;
-		private FastObservableCollection<LineTranslationVariant> _currenTranslationVariants = new FastObservableCollection<LineTranslationVariant> {
-			new LineTranslationVariant{NameEng = "eng", NameRu = "ru"}
-		};
-		private LineTranslationConfig _currentConfig;
-
+		
 		/// <summary>
 		/// Gets the LineDown command.
 		/// </summary>
