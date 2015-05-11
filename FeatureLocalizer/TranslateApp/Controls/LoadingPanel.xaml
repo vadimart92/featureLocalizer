@@ -3,11 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:classicTheme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework"
              xmlns:themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Classic"
-             xmlns:controls="clr-namespace:TranslateApp.Controls">
+             xmlns:controls="clr-namespace:TranslateApp.Controls"
+             xmlns:common="clr-namespace:TranslateApp.Common">
 
   <UserControl.Resources>
-    <BooleanToVisibilityConverter x:Key="bool2visibility" />
-
+        <common:InvertBooleanToVisibilityConverter x:Key="InvertBooleanToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="bool2visibility" />
+      
     <LinearGradientBrush x:Key="panelBackground" EndPoint="0.5,1" StartPoint="0.5,0">
       <GradientStop Color="#006FC5E6" Offset="1" />
       <GradientStop Color="WhiteSmoke" />
@@ -92,20 +94,29 @@
             Click="OnCloseClick"
             Content="Close X" />
 
-    <controls:CircularProgressBar x:Name="progressBar"
+        <Image Height="48px" Width="48px" 
+                DockPanel.Dock="Left"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+               Source="../Resources/img/success.png" 
+               Visibility="{Binding Path=IsProgressVisible, Converter={StaticResource InvertBooleanToVisibilityConverter}}"
+               Margin="18,10" />
+        
+        <controls:CircularProgressBar x:Name="progressBar"
                              DockPanel.Dock="Left"
                              HorizontalAlignment="Left"
                              VerticalAlignment="Top"
                              Height="45"
-                             Margin="18,10" />
+                             Margin="-64,10" 
+                             Visibility="{Binding Path=IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-    <StackPanel VerticalAlignment="Top">
-      <TextBlock x:Name="txtMessage"
-                 Style="{StaticResource panelMessageText}" 
-                 Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=Message}" 
-                 Foreground="#FFA1C3D2" />
-      
-      <TextBlock x:Name="txtSubMessage"
+        <StackPanel VerticalAlignment="Top">
+            <TextBlock x:Name="txtMessage"
+                        Style="{StaticResource panelMessageText}" 
+                        Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=Message}" 
+                        Foreground="#FFA1C3D2" />
+
+            <TextBlock x:Name="txtSubMessage"
                  Style="{StaticResource panelSubMessageText}" 
                  Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SubMessage}" 
                  Foreground="#FFA1C3D2" />

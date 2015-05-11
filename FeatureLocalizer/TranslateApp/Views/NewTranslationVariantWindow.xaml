@@ -1,0 +1,29 @@
+﻿<controls:MetroWindow x:Class="TranslateApp.Views.NewTranslationVariantWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:viewModels1="clr-namespace:TranslateApp.ViewModels"
+        Title="Type new variant" Height="176" Width="293" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+    <Window.DataContext>
+        <viewModels1:NewTranslationVariantWindowVM/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10pt" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30pt" />
+        </Grid.RowDefinitions>
+        <ScrollViewer Grid.Row="1" Margin="6pt 0" VerticalScrollBarVisibility="Auto">
+            <StackPanel >
+                <Label Content="Ru"/>
+                <TextBox Name="RuTextBox" Text="{Binding RuName, Mode=TwoWay}" TabIndex="1" />
+                <Label Content="En"/>
+                <TextBox Name="EngTextBox" Text="{Binding EnName, Mode=TwoWay}" TabIndex="2" />
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="0 6pt 20pt 6pt" Padding="4pt 0" Content="Cancel" Click="Cancel_Button_Click" TabIndex="4"></Button>
+            <Button Margin="0 6pt 20pt 6pt" Padding="4pt 0" Content="Ok" Click="OkButton_OnClick" TabIndex="3"></Button>
+        </StackPanel>
+    </Grid>
+</controls:MetroWindow>

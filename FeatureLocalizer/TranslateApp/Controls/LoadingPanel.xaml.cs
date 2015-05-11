@@ -17,6 +17,9 @@ namespace TranslateApp.Controls
         public static readonly DependencyProperty IsLoadingProperty =
             DependencyProperty.Register("IsLoading", typeof(bool), typeof(LoadingPanel), new UIPropertyMetadata(false));
 
+		public static readonly DependencyProperty IsProgressVisibleProperty =
+			DependencyProperty.Register("IsProgressVisible", typeof(bool), typeof(LoadingPanel), new UIPropertyMetadata(false));
+
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register("Message", typeof(string), typeof(LoadingPanel), new UIPropertyMetadata("Loading..."));
 
@@ -45,6 +48,16 @@ namespace TranslateApp.Controls
             get { return (bool)GetValue(IsLoadingProperty); }
             set { SetValue(IsLoadingProperty, value); }
         }
+
+		public bool IsProgressVisible
+        {
+			get { return (bool)GetValue(IsProgressVisibleProperty); }
+			set
+			{
+				SetValue(IsProgressVisibleProperty, value);
+			}
+        }
+
 
         /// <summary>
         /// Gets or sets the message.

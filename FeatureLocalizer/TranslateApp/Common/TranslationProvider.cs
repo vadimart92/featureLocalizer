@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using Catel.Collections;
 using GherkinParser;
@@ -11,16 +12,21 @@ using GherkinParser;
 namespace TranslateApp.Common {
 	public class TranslationProvider {
 
+		private string _configDir;
 		private FeatureLocalizer.FeatureLocalizer _featureLocalizer;
 
 		private Dictionary<GherkinStep, List<LineTranslationConfig>> _fileInfo;
 
 		public TranslationProvider() {
-			var configDir = Path.Combine(Directory.GetCurrentDirectory(), "config");
-			_featureLocalizer = new FeatureLocalizer.FeatureLocalizer(configDir);
+			ReloadInfo();
 		}
 
-		public List<LineTranslationConfig> GeTranslationConfigs(string fileName) {
+		public void ReloadInfo() {
+			_configDir = Path.Combine(Directory.GetCurrentDirectory(), "config");
+			_featureLocalizer = new FeatureLocalizer.FeatureLocalizer(_configDir);
+		}
+
+		public List<LineTranslationConfig> GeTranslationConfigs(string fileName, IDialogService dialogService) {
 			var fileInfo = LexicParcer.ParseFile(fileName);
 			var res = new List<LineTranslationConfig>();
 			foreach (var step in fileInfo.Steps) {
@@ -30,6 +36,7 @@ namespace TranslateApp.Common {
 					var config = new LineTranslationConfig {
 						LineNumber = step.Line,
 						Regex = stepDef.Exp,
+						WordIndex = parameter.Index,
 						Variants = new ObservableCollection<LineTranslationVariant>()
 					};
 					List<string> existItems = new List<string>();
@@ -44,11 +51,30 @@ namespace TranslateApp.Common {
 							NameEng = storeItem.EnUs
 						});
 					}
-					config.Variants.Sort((variant, translationVariant) => String.Compare(variant.NameRu, translationVariant.NameRu, StringComparison.OrdinalIgnoreCase));
+					config.Variants.Add(new NewLineTranslationVariant(_featureLocalizer, parameter.ValueStoreGroup, dialogService) {
+						Config = config,
+						NameRu = "+ Добавить",
+						NameEng = "Add new"
+					});
+					config.SortVariants();
 					res.Add(config);
 				}
 			}
 			return res;
 		}
+
+		public Task Learn(string directory) {
+			return Task.Run(() => {
+				_featureLocalizer.Learn(directory);
+			});
+		}
+
+		public Task SaveData() {
+			return Task.Run(() => {
+				_featureLocalizer.SaveLearnedData(_configDir);
+			});
+		}
+
+		public string ConfigDir { get { return _configDir; } }
 	}
 }

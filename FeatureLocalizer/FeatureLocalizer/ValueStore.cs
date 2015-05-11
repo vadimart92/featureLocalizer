@@ -9,6 +9,8 @@ namespace FeatureLocalizer {
 		  
 		private Dictionary<string, ValueStoreGroup> _storeGroups;
 
+		private string _configFilesDir;
+
 		public Dictionary<string, ValueStoreGroup> StoreGroups {
 			get { return _storeGroups; }
 			set { _storeGroups = value; }
@@ -17,8 +19,10 @@ namespace FeatureLocalizer {
 		public ValueStore() {
 			_storeGroups = new Dictionary<string, ValueStoreGroup>();
 		}
-
+		
 		public ValueStore(string valueStoresDirectory) : this() {
+			if (!Directory.Exists(valueStoresDirectory)) return;
+			_configFilesDir = valueStoresDirectory;
 			foreach (var file in Directory.EnumerateFiles(valueStoresDirectory, "*.xml", SearchOption.AllDirectories)) {
 				var text = File.ReadAllText(file);
 				var xml = XElement.Parse(text);
@@ -28,8 +32,26 @@ namespace FeatureLocalizer {
 				}
 			}
 		}
+
 		public void Save(string valueStoresDirectory, string name) {
 			var fileName = string.Format("{0}\\{1}.xml", valueStoresDirectory, name);
+			var xEl = new XElement("valueStoreGroups", SerializeGroups());
+			xEl.Save(fileName);
+		}
+
+		public void Save() {
+			var name = "full";
+			var fileName = string.Format("{0}\\{1}.xml", _configFilesDir, name);
+			var oldFiles = Directory.EnumerateFiles(_configFilesDir);
+			var parentDir = Path.Combine(Directory.GetParent(_configFilesDir).FullName, "oldValueStoe");
+			if (!Directory.Exists(parentDir))
+				Directory.CreateDirectory(parentDir);
+			foreach (var file in oldFiles) {
+				var oldFi = new FileInfo(file);
+				var bakFile = String.Format("{0}\\{1}", parentDir, oldFi.Name);
+				File.Delete(bakFile);
+				File.Move(file, bakFile);
+			}
 			var xEl = new XElement("valueStoreGroups", SerializeGroups());
 			xEl.Save(fileName);
 		}

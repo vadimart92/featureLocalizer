@@ -107,7 +107,7 @@ namespace FeatureLocalizer {
 		}
 	}
 
-	public class RuValueComparer: IComparer<ValueStoreItem> {
+	public class RuValueComparer : IComparer<ValueStoreItem>, IEqualityComparer<ValueStoreItem> {
 
 		#region Члены IComparer<ValueStoreItem>
 
@@ -116,5 +116,20 @@ namespace FeatureLocalizer {
 		}
 
 		#endregion
+
+		public bool Equals(ValueStoreItem x, ValueStoreItem y) {
+			if (x.RuRu != null) {
+				return x.RuRu.Equals(y.RuRu, StringComparison.OrdinalIgnoreCase);
+			}
+			return y.RuRu == null;
+		}
+
+		public int GetHashCode(ValueStoreItem obj) {
+			if (obj.RuRu != null) {
+				return obj.RuRu.GetHashCode();
+			}
+			return 0;
+		}
 	} 
+
 }

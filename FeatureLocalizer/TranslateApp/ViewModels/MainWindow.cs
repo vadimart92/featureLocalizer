@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Windows;
+using System.Threading;
+using System.Threading.Tasks;
 using Catel.Collections;
 using Catel.Data;
-using Catel.IoC;
 using Catel.MVVM;
 using ICSharpCode.AvalonEdit.Document;
 using Microsoft.Win32;
 using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.CodeCompletion;
-using ICSharpCode.AvalonEdit.Highlighting;
 using TranslateApp.Common;
 using ICSharpCode.AvalonEdit.Folding;
 using Ookii.Dialogs.Wpf;
 
 namespace TranslateApp.ViewModels {
 	public sealed class MainWindowViewModel : ViewModelBase {
+
 		readonly BraceFoldingStrategy _foldingStrategy = new BraceFoldingStrategy();
 		readonly TranslationProvider _translationProvider = new TranslationProvider();
+		private readonly IDialogService _dialogService;
+
 		private string _currentFile;
 
 		private readonly FastObservableCollection<LineTranslationVariant> _currenTranslationVariants =
@@ -29,20 +28,32 @@ namespace TranslateApp.ViewModels {
 
 		private LineTranslationConfig _currentConfig;
 
+		Task OnLearnComplete;
 
 		ColorizeAvalonEdit _ce = new ColorizeAvalonEdit();
 
-		public MainWindowViewModel() {
-			Title = "Hello!";
-			
+		public MainWindowViewModel(IDialogService dialogService) {
+			Contract.Requires(dialogService != null, "dialogService != null");
+			_dialogService = dialogService;
+			Title = "Autotest localizer";
 		}
 
 		public TextEditor TranslationTextEditor {
 			get { return _translationTextEditor; }
 			set {
-				UpdateFoldingStrategy(value, _foldingStrategy);
 				value.TextArea.TextView.LineTransformers.Add(_ce);
 				_translationTextEditor = value;
+			}
+		}
+
+		private TextEditor _sourceTextEditor;
+		public TextEditor SourceTextEditor {
+			get { return _sourceTextEditor; }
+			set {
+				Contract.Requires(value!=null, "value!=null");
+				value.TextArea.Caret.PositionChanged += SourceTextEditorCaret_PositionChanged;
+				value.TextArea.TextView.LineTransformers.Add(_ce);
+				_sourceTextEditor = value;
 			}
 		}
 
@@ -56,20 +67,15 @@ namespace TranslateApp.ViewModels {
 			get { return _currentConfig; }
 			set
 			{
+				Contract.Requires(value!=null, "value!=null");
 				_currentConfig = value;
 				_currenTranslationVariants.Clear();
 				_currenTranslationVariants.AddItems(value.Variants);
-			}
-		}
-
-		private TextEditor _sourceTextEditor;
-		public TextEditor SourceTextEditor {
-			get { return _sourceTextEditor; }
-			set {
-				value.TextArea.Caret.PositionChanged+=SourceTextEditorCaret_PositionChanged;
-				UpdateFoldingStrategy(value, _foldingStrategy);
-				value.TextArea.TextView.LineTransformers.Add(_ce);
-				_sourceTextEditor = value;
+				_ce.LineNum = value.LineNumber;
+				SourceTextEditor.TextArea.Caret.Line = value.LineNumber;
+				SourceTextEditor.TextArea.Caret.Column = 0;
+				value.TryTranslate(SourceTextEditor, TranslationTextEditor);
+				value.CurrentWindowVariants = _currenTranslationVariants;
 			}
 		}
 
@@ -77,7 +83,6 @@ namespace TranslateApp.ViewModels {
 			if (TranslationTextEditor.Text.Length > SourceTextEditor.CaretOffset) {
 				TranslationTextEditor.CaretOffset = SourceTextEditor.CaretOffset;
 				TranslationTextEditor.ScrollToVerticalOffset(SourceTextEditor.VerticalOffset);
-				_ce.LineNum = TranslationTextEditor.TextArea.Caret.Line;
 				TranslationTextEditor.TextArea.TextView.Redraw();
 				SourceTextEditor.TextArea.TextView.Redraw();
 			}
@@ -105,6 +110,7 @@ namespace TranslateApp.ViewModels {
 			set
 			{
 				var newVal = value < TranslationConfigs.Count ? value : 0;
+				newVal = newVal > -1 ? newVal : TranslationConfigs.Count - 1;
 				if (TranslationConfigs.Any())
 					CurrentConfig = TranslationConfigs[newVal];
 				SetValue(CurrentLineIndexProperty, newVal);	
@@ -121,7 +127,8 @@ namespace TranslateApp.ViewModels {
 		#region Translation logic
 
 		private void UpdateTranslationConfigs() {
-			var config = _translationProvider.GeTranslationConfigs(_currentFile);
+			if (!File.Exists(_currentFile)) return;
+			var config = _translationProvider.GeTranslationConfigs(_currentFile, _dialogService);
 			TranslationConfigs.AddItems(config);
 		}
 
@@ -129,6 +136,15 @@ namespace TranslateApp.ViewModels {
 			CurrentStepInfo = String.Format("Line: {0}, Exp: {1}", CurrentConfig.LineNumber, CurrentConfig.Regex);
 			SourceTextEditor.TextArea.Caret.Location = new TextLocation(CurrentConfig.LineNumber, 5);
 			SourceTextEditor.TextArea.Caret.BringCaretToView();
+		}
+
+
+		private void DoSaveFile(string fileName) {
+			var txt = TranslationTextEditor.Text;
+			if (File.Exists(fileName)) {
+				File.Delete(fileName);
+			}
+			File.WriteAllText(fileName, txt);
 		}
 
 		#endregion
@@ -222,6 +238,9 @@ namespace TranslateApp.ViewModels {
 		/// </summary>
 		private void PanelClose() {
 			PanelLoading = false;
+			if (OnLearnComplete!=null) {
+				OnLearnComplete.RunSynchronously();
+			}
 		}
 
 		#endregion
@@ -299,13 +318,39 @@ namespace TranslateApp.ViewModels {
 			if (fd.ShowDialog() ?? false) {
 				var str = File.ReadAllText(fd.FileName);
 				_currentFile = fd.FileName;
+				Title = _currentFile;
 				FirstFileText.Text = str;
 				SecondFileText.Text = str;
 				UpdateFoldingStrategy(SourceTextEditor, _foldingStrategy);
 				UpdateFoldingStrategy(TranslationTextEditor, _foldingStrategy);
 				UpdateTranslationConfigs();
+				CurrentLineIndex = 0;
 			}
 			
+		}
+
+		#endregion
+
+		#region SaveFile command
+
+		private Command _saveFileCommand;
+
+		/// <summary>
+		/// Gets the SaveFile command.
+		/// </summary>
+		public Command SaveFileCommand
+		{
+			get { return _saveFileCommand ?? (_saveFileCommand = new Command(SaveFile)); }
+		}
+
+		/// <summary>
+		/// Method to invoke when the SaveFile command is executed.
+		/// </summary>
+		private void SaveFile() {
+			var sfd = new SaveFileDialog {FileName = _currentFile};
+			if (sfd.ShowDialog() ?? false) {
+				DoSaveFile(sfd.FileName);
+			}
 		}
 
 		#endregion
@@ -325,12 +370,59 @@ namespace TranslateApp.ViewModels {
 		/// <summary>
 		/// Method to invoke when the Learn command is executed.
 		/// </summary>
-		private void Learn() {
+		private async void Learn() {
 			var dialog = new VistaFolderBrowserDialog();
 			if (dialog.ShowDialog() ?? false) {
 				PanelLoading = true;
+				IsProgressVisible = true;
+				PanelMainMessage = String.Format("Analizing translation data in directory: {0}", dialog.SelectedPath);
+				await _translationProvider.Learn(dialog.SelectedPath);
+				PanelMainMessage = String.Format("Saving learned data in: {0}", _translationProvider.ConfigDir);
+				await _translationProvider.SaveData();
+				IsProgressVisible = false;
+				PanelMainMessage = String.Format("Saved in: {0}", _translationProvider.ConfigDir);
+				OnLearnComplete = OnLearnCompleteAction(_translationProvider.ConfigDir);
 			}
 		}
+
+		private Task OnLearnCompleteAction(string dirPath) {
+			return new Task(() => {
+				var dialog = new TaskDialog();
+				var openFolderBtn = new TaskDialogButton("Open folder");
+				var relodDataBtn = new TaskDialogButton("Reload translation info");
+				dialog.Buttons.Add(openFolderBtn);
+				dialog.Buttons.Add(relodDataBtn);
+				dialog.AllowDialogCancellation = false;
+				dialog.ExpandedByDefault = true;
+				dialog.Content = "Learning complete. Choose options";
+				var resultButton = dialog.ShowDialog();
+				if (resultButton == openFolderBtn) {
+					System.Diagnostics.Process.Start(dirPath);
+				}
+				_translationProvider.ReloadInfo();
+				UpdateTranslationConfigs();
+				CurrentLineIndex = 0;
+				OnLearnComplete = null;
+			});
+		}
+
+		#endregion
+
+		#region IsProgressVisible property
+
+		/// <summary>
+		/// Gets or sets the IsProgressVisible value.
+		/// </summary>
+		public bool IsProgressVisible
+		{
+			get { return GetValue<bool>(IsProgressVisibleProperty); }
+			set { SetValue(IsProgressVisibleProperty, value); }
+		}
+
+		/// <summary>
+		/// IsProgressVisible property data.
+		/// </summary>
+		public static readonly PropertyData IsProgressVisibleProperty = RegisterProperty("IsProgressVisible", typeof (bool), true);
 
 		#endregion
 

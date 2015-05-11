@@ -28,9 +28,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </metro:MetroWindow.Resources>
-    <metro:MetroWindow.DataContext >
-        <viewModels:MainWindowViewModel />
-    </metro:MetroWindow.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -47,29 +44,30 @@
                                   ReduceOrder="groupLL, groupLL, groupLL, (groupLL),(groupLL),(groupLL),(groupLL),(groupLL)">
 
                 <fluent:RibbonGroupBox Header="File">
-                    <fluent:Button Command="{Binding Path=OpenFileCommand}">Open</fluent:Button>
+                    <fluent:Button Command="{Binding Path=OpenFileCommand}" LargeIcon="../Resources/img/open.png">Open</fluent:Button>
+                    <fluent:Button Command="{Binding Path=SaveFileCommand}" LargeIcon="../Resources/img/save.png">Save</fluent:Button>
                 </fluent:RibbonGroupBox>
                 <fluent:RibbonGroupBox Header="Navigation">
                     <fluent:Button Command="{Binding Path=LineUpCommand}">Up&#160;↑</fluent:Button>
                     <fluent:Button Command="{Binding Path=LineDownCommand}">Down&#160;↓</fluent:Button>
                 </fluent:RibbonGroupBox>
                 <fluent:RibbonGroupBox Header="Dictionary" >
-                    <fluent:InRibbonGallery ResizeMode="Both" MinItemsInRow="5" MaxItemsInRow="10"
+                    <fluent:InRibbonGallery ResizeMode="Both" MinItemsInRow="5" MaxItemsInRow="15"
                                             ItemsSource="{Binding Path=CurrenTranslationVariants}"
                                             Selectable="False"
                                             >
                         <fluent:InRibbonGallery.ItemTemplate>
-                            <DataTemplate>
-                                <fluent:Button Header="{Binding NameRu}" 
+                            <DataTemplate DataType="common:LineTranslationVariant">
+                                <fluent:ToggleButton Header="{Binding NameRu}" Foreground="{Binding Background}"
                                                Command="{Binding ReplaceTextCommand}"
-                                               Size="Middle">
-                                    <fluent:Button.CommandParameter>
+                                               Size="Middle" IsChecked="{Binding IsSelected}">
+                                    <fluent:ToggleButton.CommandParameter>
                                         <MultiBinding Converter="{StaticResource EditorsParameterConverter}">
                                             <Binding ElementName="SourceTextEditor" />
                                             <Binding ElementName="TranslationTextEditor"/>
                                         </MultiBinding>
-                                    </fluent:Button.CommandParameter>
-                                </fluent:Button>
+                                    </fluent:ToggleButton.CommandParameter>
+                                </fluent:ToggleButton>
                             </DataTemplate>
                         </fluent:InRibbonGallery.ItemTemplate>
                     </fluent:InRibbonGallery>
@@ -80,8 +78,8 @@
                                   IsSeparatorVisible="true"
                                   ReduceOrder="groupLL, groupLL, groupLL, (groupLL),(groupLL),(groupLL),(groupLL),(groupLL)">
 
-                <fluent:RibbonGroupBox Header="Gallery">
-                    <fluent:Button Command="{Binding LearnCommand}">Select dir</fluent:Button>
+                <fluent:RibbonGroupBox Header="Learn">
+                    <fluent:Button Command="{Binding LearnCommand}" LargeIcon="../Resources/img/learn.png">Select dir</fluent:Button>
                 </fluent:RibbonGroupBox>
             </fluent:RibbonTabItem>
         </fluent:Ribbon>
@@ -95,7 +93,7 @@
                                Style="{StaticResource ResourceKey=MainTextBoxStyle}" 
                                Document="{Binding Path=FirstFileText}"
                                SyntaxHighlighting="Gherkin"
-                               IsEnabled="False"/>
+                               IsReadOnly="True"/>
             <avalon:TextEditor Name="TranslationTextEditor" Grid.Column="2" 
                                Style="{StaticResource ResourceKey=MainTextBoxStyle}"  
                                Document="{Binding Path=SecondFileText}"
@@ -119,7 +117,8 @@
                         IsLoading="{Binding PanelLoading}"
                         Message="{Binding PanelMainMessage}"
                         SubMessage="{Binding PanelSubMessage}" 
-                        ClosePanelCommand="{Binding PanelCloseCommand}"/>
+                        ClosePanelCommand="{Binding PanelCloseCommand}"
+                        IsProgressVisible="{Binding IsProgressVisible}"/>
         </Grid>
     </Grid>
 </metro:MetroWindow>

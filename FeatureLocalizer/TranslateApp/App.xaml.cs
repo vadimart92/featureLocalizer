@@ -8,6 +8,7 @@ using System.Windows;
 using Catel.IoC;
 using Catel.Services;
 using Microsoft.Practices.Unity;
+using TranslateApp.Common;
 using TranslateApp.ViewModels;
 using TranslateApp.Views;
 
@@ -22,9 +23,12 @@ namespace TranslateApp {
 			RegisterDependencies(container);
 			var window = container.Resolve<MainWindow>();
 			window.Show();
+			var dialogService = container.Resolve<DialogService>();
+			dialogService.RegisterParentwindow(window);
 		}
 
 		private void RegisterDependencies(IUnityContainer container) {
+			container.RegisterType<IDialogService, DialogService>(new ContainerControlledLifetimeManager());
 		}
 	}
 }

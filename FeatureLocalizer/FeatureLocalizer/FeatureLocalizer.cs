@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,7 +23,7 @@ namespace FeatureLocalizer {
 		{
 			get { return _configFolder; }
 			set {
-				Debug.Assert(Directory.Exists(value), String.Format("path {0} does not exist", value));
+				Contract.Assert(Directory.Exists(value), String.Format("path {0} does not exist", value));
 				_configFolder = value;
 			}
 		}
@@ -67,16 +68,17 @@ namespace FeatureLocalizer {
 				var paramNames = stepDefRegex.Key.GetValidNames();
 				for (int paramNumber = 0; paramNumber < paramNames.Count; paramNumber++) {
 					var group = new ValueStoreGroup(paramNames[paramNumber]);
+					var tmpItems = new HashSet<ValueStoreItem>(ValueStoreItem.RuValueComparer);
 					foreach (var gherkinStep in stepDefRegex.Value) {
 						var item = ValueStoreItem.FromMacros(gherkinStep.Text, paramNumber);
 						if (item == default(ValueStoreItem)) {
 							continue;
 						}
-						var foundItemIndex = group.Items.BinarySearch(item, ValueStoreItem.RuValueComparer);
-						if (foundItemIndex < 0) {
-							group.Items.Add(item);
+						if (!tmpItems.Contains(item)) {
+							tmpItems.Add(item);
 						}
 					}
+					group.Items.AddRange(tmpItems.ToList());
 					valueStore.AddGroup(group);
 					stepDefStore.AddStepDef(stepDefRegex.Key);
 				}

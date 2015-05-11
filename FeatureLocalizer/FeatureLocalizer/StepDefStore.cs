@@ -21,6 +21,7 @@ namespace FeatureLocalizer {
 		}
 
 		public StepDefStore(string stepDefsDir, ValueStore valueStore) : this(valueStore) {
+			if(!Directory.Exists(stepDefsDir)) return;
 			var files = Directory.EnumerateFiles(stepDefsDir, "*.xml");
 			foreach (var file in files) {
 				var stepDefs = ParseStepDef(file);

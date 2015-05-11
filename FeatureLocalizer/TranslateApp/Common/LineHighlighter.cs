@@ -8,7 +8,7 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Rendering;
 
 namespace TranslateApp.Common {
-	public class ColorizeAvalonEdit : ICSharpCode.AvalonEdit.Rendering.DocumentColorizingTransformer {
+	public class ColorizeAvalonEdit : DocumentColorizingTransformer {
 		public int LineNum {
 			get;
 			set;
