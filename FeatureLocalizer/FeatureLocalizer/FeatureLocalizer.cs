@@ -23,6 +23,8 @@ namespace FeatureLocalizer {
 		{
 			get { return _configFolder; }
 			set {
+				if (!Directory.Exists(value))
+					Directory.CreateDirectory(value);
 				Contract.Assert(Directory.Exists(value), String.Format("path {0} does not exist", value));
 				_configFolder = value;
 			}
@@ -36,6 +38,10 @@ namespace FeatureLocalizer {
 
 		public FeatureLocalizer(string configFolder) {
 			ConfigFolder = configFolder;
+			if (!Directory.Exists(ValueStoreConfigsDir))
+				Directory.CreateDirectory(ValueStoreConfigsDir);
+			if (!Directory.Exists(StepDefStoreConfigsDir))
+				Directory.CreateDirectory(StepDefStoreConfigsDir);
 			ValueStore = new ValueStore(ValueStoreConfigsDir);
 			StepDefStore = new StepDefStore(StepDefStoreConfigsDir, ValueStore);
 		}
@@ -132,7 +138,7 @@ namespace FeatureLocalizer {
 				end = line.LastIndexOf(@"/,", StringComparison.Ordinal);
 			}
 			end = end - start;
-			if (start > 0 && end < line.Length) {
+			if (start > 0 && end < line.Length && end > 0) {
 				return line.Substring(start + 3, end - 3);
 			}
 			return string.Empty;

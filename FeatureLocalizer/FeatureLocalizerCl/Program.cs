@@ -17,7 +17,7 @@ namespace FeatureLocalizerCl {
 
 			//var infos = LexicParcer.ParseFolder(featureFilePath);
 
-			var fl = new FeatureLocalizer.FeatureLocalizer();
+			var fl = new FeatureLocalizer.FeatureLocalizer("");
 			fl.Learn(featureFilePath);
 			fl.SaveLearnedData(@"F:\DEV\featureLocalizer\config");
 			fl.Translate(@"F:\DEV\featureLocalizer\config", @"F:\DEV\featureLocalizer\sales\features\order");

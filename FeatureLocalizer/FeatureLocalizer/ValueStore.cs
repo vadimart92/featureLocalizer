@@ -40,7 +40,7 @@ namespace FeatureLocalizer {
 		}
 
 		public void Save() {
-			var name = "full";
+			var name = "edited";
 			var fileName = string.Format("{0}\\{1}.xml", _configFilesDir, name);
 			var oldFiles = Directory.EnumerateFiles(_configFilesDir);
 			var parentDir = Path.Combine(Directory.GetParent(_configFilesDir).FullName, "oldValueStoe");
@@ -49,7 +49,8 @@ namespace FeatureLocalizer {
 			foreach (var file in oldFiles) {
 				var oldFi = new FileInfo(file);
 				var bakFile = String.Format("{0}\\{1}", parentDir, oldFi.Name);
-				File.Delete(bakFile);
+				if (File.Exists(bakFile))
+					File.Delete(bakFile);
 				File.Move(file, bakFile);
 			}
 			var xEl = new XElement("valueStoreGroups", SerializeGroups());
